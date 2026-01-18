@@ -1,0 +1,31 @@
+=== MA-YP Day 3 - SP1 Environment Setup ===
+Date: $(date)
+System: Ubuntu 24.04 LTS (Native Dual Boot)
+
+=== System Info ===
+$(uname -a)
+
+=== Storage Info ===
+$(df -h /home | head -2)
+
+=== RAM Info ===
+$(free -h | grep Mem)
+
+=== Rust Version ===
+$(rustc --version)
+
+=== Cargo Version ===
+$(cargo --version)
+
+=== SP1 Version ===
+$(sp1 --version)
+
+=== Cargo Prove ===
+$(cargo prove --version)
+
+=== Succinct Rust Toolchain ===
+$(cargo +succinct --version)
+
+=== RISC-V Target ===
+$(rustup target list | grep riscv32im-succinct-zkvm-elf)
+
