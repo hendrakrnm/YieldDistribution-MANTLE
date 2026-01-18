@@ -37,61 +37,67 @@ The following diagram illustrates the high-level architecture of the system, div
 
 ```mermaid
 graph LR
-    subgraph OffChain [OFF-CHAIN LAYER]
-        direction TB
-        
-        subgraph IssuerSide [ISSUER SIDE]
-            I1["1. Input Data:<br/>- Revenue<br/>- Expenses<br/>- Token holders"]
-            I2["2. Build Merkle<br/>Tree locally"]
-            I1 --> I2
-        end
-        
-        subgraph SP1 [SP1 zkVM<br/>Rust Program]
-            S1["• Calculate net yield<br/>• Build merkle root<br/>• Generate proof"]
-        end
-        
-        IssuerSide --> SP1
 
-        subgraph InvestorSide [INVESTOR SIDE]
-            Inv1["1. Credential:<br/>- Accredited<br/>- KYC Level<br/>- Jurisdiction"]
-            Inv2["2. Generate ZK<br/>Credential Proof"]
-            Inv1 --> Inv2
-        end
+%% ================= OFF-CHAIN =================
+subgraph OffChain["OFF-CHAIN LAYER"]
+    direction TB
 
-        subgraph Circom [Circom Circuit<br/>Credential]
-            C1["• Verify signature<br/>• Check expiry<br/>• Prove claim<br/>• Generate proof"]
-        end
-
-        InvestorSide --> Circom
+    subgraph IssuerSide["ISSUER SIDE"]
+        I1["1. Input Data<br/>- Revenue<br/>- Expenses<br/>- Token holders"]
+        I2["2. Build Merkle Tree locally"]
+        I1 --> I2
     end
 
-    subgraph OnChain [ON-CHAIN LAYER (Mantle L2)]
-        direction TB
-        
-        subgraph MainContract [YieldDistribution.sol]
-            
-            subgraph Function1 [FUNCTION 1: submitYieldProof]
-                F1Input[/"Input:<br/>- totalYield<br/>- merkleRoot<br/>- sp1Proof"/]
-                F1Logic["Logic:<br/>1. Verify SP1 proof<br/>2. Store distribution<br/>3. Emit Event"]
-                F1Input --> F1Logic
-            end
-
-            subgraph Function2 [FUNCTION 2: claimYield]
-                F2Input[/"Input:<br/>- distributionId<br/>- amount, merkleProof<br/>- credentialProof<br/>- nullifier"/]
-                F2Logic["Logic:<br/>1. Check nullifier<br/>2. Verify Merkle Proof<br/>3. Verify Credential<br/>4. Transfer & Emit"]
-                F2Input --> F2Logic
-            end
-        end
-
-        SP1Verifier[SP1Verifier.sol]
-        CredVerifier[CredentialVerifier]
-        
-        Function1 -.-> SP1Verifier
-        Function2 -.-> CredVerifier
+    subgraph SP1["SP1 zkVM"]
+        SP1Desc["Rust Program<br/>- Calculate net yield<br/>- Build merkle root<br/>- Generate proof"]
     end
 
-    SP1 -->|Submit Proof| Function1
-    Circom -->|Submit Claim| Function2
+    IssuerSide --> SP1
+
+    subgraph InvestorSide["INVESTOR SIDE"]
+        Inv1["1. Credential<br/>- Accredited<br/>- KYC Level<br/>- Jurisdiction"]
+        Inv2["2. Generate ZK Credential Proof"]
+        Inv1 --> Inv2
+    end
+
+    subgraph Circom["Circom Circuit"]
+        C1["Credential Proof<br/>- Verify signature<br/>- Check expiry<br/>- Prove claim<br/>- Generate proof"]
+    end
+
+    InvestorSide --> Circom
+end
+
+%% ================= ON-CHAIN =================
+subgraph OnChain["ON-CHAIN LAYER - Mantle L2"]
+    direction TB
+
+    subgraph MainContract["YieldDistribution.sol"]
+
+        subgraph Function1["submitYieldProof"]
+            F1Input["Input<br/>- totalYield<br/>- merkleRoot<br/>- sp1Proof"]
+            F1Logic["Logic<br/>1. Verify SP1 proof<br/>2. Store distribution<br/>3. Emit event"]
+            F1Input --> F1Logic
+        end
+
+        subgraph Function2["claimYield"]
+            F2Input["Input<br/>- distributionId<br/>- amount<br/>- merkleProof<br/>- credentialProof<br/>- nullifier"]
+            F2Logic["Logic<br/>1. Check nullifier<br/>2. Verify Merkle Proof<br/>3. Verify Credential<br/>4. Transfer & Emit"]
+            F2Input --> F2Logic
+        end
+    end
+
+    SP1Verifier["SP1Verifier.sol"]
+    CredVerifier["CredentialVerifier.sol"]
+
+    Function1 -.-> SP1Verifier
+    Function2 -.-> CredVerifier
+end
+
+%% ================= FLOWS =================
+SP1 -->|Submit Proof| Function1
+Circom -->|Submit Claim| Function2
+
+
 ```
 
 ### Component Details
